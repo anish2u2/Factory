@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<framework>
+	<config>
+		<!-- This will be used for scanning classes implementations of InitFramework -->
+		<component scane-package="org.factory.design.init" />
+		<!-- This will be used for listening Event that Adapter framework has initialized 
+			this framework -->
+		<listener
+			framework-init-listener="org.factory.design.listeners.ListenAdpterFrameworkInitialization" />
+	</config>
+</framework>
