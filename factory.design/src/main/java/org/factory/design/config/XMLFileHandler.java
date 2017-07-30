@@ -36,7 +36,7 @@ public class XMLFileHandler {
 		try {
 			InputStream stream = Utility.findResourcesInClassPath(fileName);
 			if (stream == null)
-				throw new RuntimeException("Unable to find " + AppConstant.FACTORY_CONFIG_FILE + " in the class path.");
+				throw new RuntimeException("Unable to find " + fileName + " in the class path.");
 			JAXBContext jaxbContext = JAXBContext.newInstance(typeOfObject);
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			return unmarshaller.unmarshal(stream);

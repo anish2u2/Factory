@@ -1,12 +1,14 @@
 package org.factory.design.context;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.adapter.framework.contracts.BeanFactory;
 import org.factory.design.cache.DefaultBeanCache;
 import org.factory.design.contracts.BeanCache;
 import org.factory.design.contracts.Context;
+import org.factory.design.loaders.SubFactoryClassLoader;
 import org.springframework.context.annotation.Bean;
 
 /*
@@ -17,29 +19,18 @@ import org.springframework.context.annotation.Bean;
  * further release we will make it for current thread.  
  */
 
-public class AppContext implements Context, org.adapter.framework.event.contract.Context {
+public class AppContext implements Context {
 
 	private Map<Object, Object> context;
 
 	private static Context appContext;
 
-	private BeanFactory beanFactory = null;
+	private static List<SubFactoryClassLoader> subFactoryClassLoaders;
 
 	public BeanCache beanCache = DefaultBeanCache.getCache();
 
 	private AppContext() {
 		context = new HashMap<Object, Object>();
-		beanFactory = new BeanFactory() {
-
-			public Object getBean(Class<?> targetClassType) {
-
-				return beanCache.findBean(targetClassType);
-			}
-
-			public Object getObject(String qualifier) {
-				return beanCache.findByName(qualifier);
-			}
-		};
 	}
 
 	@Bean(name = "factoryContext")
@@ -67,17 +58,34 @@ public class AppContext implements Context, org.adapter.framework.event.contract
 	}
 
 	public Object getObject(Object object) {
+		Object proxyObject = findInSubLoaders(object);
+		if (proxyObject != null)
+			return proxyObject;
 		return context.get(object);
 	}
 
 	public void add(String key, Object object) {
 		context.put(key, object);
-
 	}
 
-	public BeanFactory getBeanfactory() {
+	private Object findInSubLoaders(Object classObject) {
+		Object object = null;
+		for (SubFactoryClassLoader subFactoryClassLoader : subFactoryClassLoaders) {
+			object = subFactoryClassLoader.getProxy().getProxyBean((Class<?>) classObject);
+			if (object != null) {
+				beanCache.addToCache((Class<?>) classObject, object);
+				return object;
+			}
+		}
+		return object;
+	}
 
-		return beanFactory;
+	public static List<SubFactoryClassLoader> getSubFactoryClassLoaders() {
+		return subFactoryClassLoaders;
+	}
+
+	public static void setSubFactoryClassLoaders(List<SubFactoryClassLoader> subFactoryClassLoaders) {
+		AppContext.subFactoryClassLoaders = subFactoryClassLoaders;
 	}
 
 }

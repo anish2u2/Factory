@@ -7,8 +7,33 @@ import java.util.List;
 
 import org.factory.design.cache.DefaultBeanCache;
 import org.factory.design.contracts.BeanCache;
+import org.factory.design.loaders.SubFactoryClassLoader;
 
 public class ReflectionUtility {
+
+	public static void createCacheObjectOfAnnotatedBeansUsingSubCLassLoader(List<Class<?>> annotatedClasses,
+			BeanCache cache, List<Class<?>> listOfClazz, List<SubFactoryClassLoader> subFactoryClassLoaders) {
+		boolean flage = false;
+		for (Class<?> clazz : listOfClazz) {
+			for (SubFactoryClassLoader subFactoryClassLoader : subFactoryClassLoaders) {
+				if (subFactoryClassLoader.getListOfLoadedClass().contains(clazz)) {
+					cache.addToCache(clazz, subFactoryClassLoader.getProxy().getProxyBean(clazz));
+					flage = true;
+				}
+			}
+			if (!flage) {
+				Annotation[] annotations = clazz.getDeclaredAnnotations();
+				System.out.println("Finding Annotation for Class:" + clazz.getName());
+				for (Annotation annotation : annotations) {
+					System.out.println("Annotations:" + annotation.annotationType().getName());
+					if (annotatedClasses.contains(annotation.annotationType())) {
+						createCacheObjects(cache, clazz);
+					}
+
+				}
+			}
+		}
+	}
 
 	public static void createCacheObjectOfAnnotatedBeans(List<Class<?>> annotatedClasses, BeanCache cache,
 			List<Class<?>> listOfClazz) {
